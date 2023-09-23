@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PTR Rocket Tracker - Flight Details</title>
+    <!-- Include Leaflet CSS and JavaScript libraries -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+	<link rel="stylesheet" href="leaflet_fullscreen.css"/>
+	<link rel="icon" href="favicon.svg" type="image/svg+xml">
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+	<script src="leaflet_fullscreen.js"></script>
+    <!-- Include your custom CSS and JavaScript files -->
+    <link rel="stylesheet" href="styles_flight_details.css" />
+    <script src="scripts_flight_details.js"></script>
+</head>
+<body>
+    <div id="map"></div>
+    <div class="table-container">
+        <h2>Flight Details</h2>
+        <table id="flight-details-table">
+            <thead>
+                <tr>
+                    <th>Last Latitude</th>
+                    <th>Last Longitude</th>
+					<th>Last Altitude</th>
+                </tr>
+            </thead>
+            <tbody id="flight-details-body">
+                <!-- The table rows will be populated dynamically using JavaScript -->
+            </tbody>
+        </table>
+    </div>
+	
+	<button id="openGoogleMapsBtn">Open Google Maps</button>
+	<button id="downloadLogFileBtn">Download log file</button>
+	
+    <div class="table-container">
+        <h2>Data points</h2>
+        <table id="data-sql-table">
+            <thead>
+                <tr>
+                    <th>No</th>
+                    <th>Packet No</th>
+					<th>Timestamp</th>
+					<th>Vbat [V]</th>
+					<th>Latitude</th>
+					<th>Longitude</th>
+					<th>Altitude [m]</th>
+                    <!-- Add more columns as needed based on the structure of your Data SQL table -->
+                </tr>
+            </thead>
+            <tbody id="data-sql-body">
+                <!-- The table rows will be populated dynamically using JavaScript -->
+            </tbody>
+        </table>
+    </div>
+</body>
+</html>

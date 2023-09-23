@@ -1,0 +1,79 @@
+body {
+    font-family: Arial, sans-serif;
+    margin: 0;
+}
+
+/* Set the container styles */
+#map-container {
+    width: 100%;
+    height: 600px;
+    margin: 10px;
+}
+
+#table-container {
+    width: 100%;
+    height: 400px;
+    margin: 10px;
+}
+
+/* Add nice borders to the table */
+#data-table {
+    border-collapse: collapse;
+    width: 100%;
+}
+
+#data-table th, #data-table td {
+    border: 1px solid #ddd;
+    padding: 8px;
+    text-align: left;
+}
+
+/* Add some spacing for the download buttons */
+.download-btn {
+    margin-left: 10px;
+}
+
+/* Highlight row on hover */
+#data-table tbody tr:hover {
+    background-color: #f2f2f2;
+}
+
+/* Responsive styles */
+@media screen and (max-width: 768px) {
+    /* Reduce font size for smaller screens */
+    #data-table th, #data-table td {
+        font-size: 14px;
+    }
+
+    /* Add horizontal scrolling to the table container */
+    #table-container {
+        overflow-x: auto;
+    }
+
+    /* Hide less essential columns on small screens */
+    #data-table th:nth-child(1),
+    #data-table td:nth-child(1),
+    #data-table th:nth-child(6),
+    #data-table td:nth-child(6),
+    #data-table th:nth-child(7),
+    #data-table td:nth-child(7) {
+        display: none;
+    }
+}
+
+/* Style for the "Details" button in the table */
+.details-button {
+    width: 100%;
+    height: 100%;
+    padding: 5px; /* Adjust padding as needed */
+    font-size: 14px;
+    background-color: #28a745;
+    color: #fff;
+    border: none;
+    border-radius: 3px;
+    cursor: pointer;
+}
+
+.details-button:hover {
+    background-color: #218838;
+}

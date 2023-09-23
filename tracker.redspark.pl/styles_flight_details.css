@@ -1,0 +1,79 @@
+body {
+    font-family: Arial, sans-serif;
+    margin: 0;
+}
+
+#map {
+    height: 500px;
+}
+
+.table-container {
+    margin: 20px;
+}
+
+h2 {
+    margin-bottom: 10px;
+}
+
+table {
+    border-collapse: collapse;
+    width: 100%;
+    margin-bottom: 20px;
+}
+
+table, th, td {
+    border: 1px solid #ddd;
+    padding: 8px;
+    text-align: center;
+}
+
+th {
+    background-color: #f2f2f2;
+}
+
+tr:hover {
+    background-color: #f5f5f5;
+}
+
+/* Style for the "Download log file" button */
+#downloadLogFileBtn,
+#openGoogleMapsBtn {
+    font-size: 18px;
+    padding: 12px 24px;
+    background-color: #007BFF;
+    color: #fff;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    margin-top: 20px;
+	text-align: center;
+	margin-left: 10%;
+}
+
+#downloadLogFileBtn:hover,
+#openGoogleMapsBtn:hover {
+    background-color: #0056b3;
+}
+
+/* Responsive styles */
+@media screen and (max-width: 768px) {
+    /* Reduce font size for smaller screens */
+    #data-sql-table th, #data-sql-table td {
+        font-size: 14px;
+    }
+
+    /* Add horizontal scrolling to the table container */
+    #table-container {
+        overflow-x: auto;
+    }
+
+    /* Hide less essential columns on small screens */
+    #data-sql-table th:nth-child(1),
+    #data-sql-table td:nth-child(1),
+    #data-sql-table th:nth-child(2),
+    #data-sql-table td:nth-child(2),
+    #data-sql-table th:nth-child(4),
+    #data-sql-table td:nth-child(4) {
+        display: none;
+    }
+}
