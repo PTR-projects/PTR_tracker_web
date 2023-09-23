@@ -120,7 +120,15 @@ function addDataPoint($objectID, $packetNo, $latitude, $longitude, $altitude, $g
 //echo "Parsing started". PHP_EOL;
 // Check if the request is a GET request and contains the required parameters
 if ($_SERVER["REQUEST_METHOD"] === "GET"
+	&& isset($_GET["api_key"])
     && isset($_GET["object_id"], $_GET["packet_no"], $_GET["latitude"], $_GET["longitude"], $_GET["altitude"], $_GET["sats_fix"], $_GET["vbat"], $_GET["max_altitude"],  $_GET["raw"])) {
+	
+	// Check API key
+	require 'config.php';
+	if($_GET["api_key"] != $api_key){
+		echo "API key error";
+		return;
+	}
 
 	$arguments_valid = true;
 	
