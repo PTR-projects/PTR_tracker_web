@@ -1,6 +1,9 @@
 # Ignore the config.php file
 /config.php
 
+# Ignore the error log file
+/error_log
+
 # Ignore PHPStorm project files (if applicable)
 /.idea/
 
