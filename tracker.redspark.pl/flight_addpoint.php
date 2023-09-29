@@ -106,7 +106,7 @@ function addDataPoint($objectID, $packetNo, $latitude, $longitude, $altitude, $g
 	
     // Insert the new data point into the Data table
     $sql = "INSERT INTO Data (flight_id, object_id, datetime, packet_no, latitude, longitude, altitude, gnss_sats, gnss_fix, vbat, max_altitude, raw) 
-            VALUES ($flight_id, $objectID, NOW(), $packetNo, $latitude, $longitude, $altitude, $gnssSats, '$gnssFix', $vbat, $max_altitude, $raw)";
+            VALUES ($flight_id, $objectID, NOW(), $packetNo, $latitude, $longitude, $altitude, $gnssSats, $gnssFix, $vbat, $max_altitude, '$raw')";
     executeQuery($sql);
 	//echo "Add new data point $sql" . PHP_EOL;
     
@@ -144,6 +144,10 @@ if ($_SERVER["REQUEST_METHOD"] === "GET"
     $max_altitude = floatval($_GET["max_altitude"]);
 	$raw = $_GET["raw"];
 	
+	//clear Raw
+	$raw = trim($raw, '"');
+	$raw = trim($raw, "'");
+	
 	$max_length_raw = 20; 							// Change this to the desired maximum length
 	if (strlen($raw) > $max_length_raw) {
 		$raw = substr($raw, 0, $max_length_raw); 	// Truncate the text to the maximum length
@@ -157,6 +161,10 @@ if ($_SERVER["REQUEST_METHOD"] === "GET"
 
 	if($arguments_valid == true){
 		$result = addDataPoint($objectID, $packetNo, $latitude, $longitude, $altitude, $gnssSats, $gnssFix, $vbat, $max_altitude, $raw);
+		echo "success";
+	}
+	else {
+	    echo "error";
 	}
 }
 else {
