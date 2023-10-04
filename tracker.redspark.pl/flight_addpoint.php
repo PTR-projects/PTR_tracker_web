@@ -8,7 +8,6 @@ function executeQuery($sql) {
 	$password = $sql_pass;
 	$dbname = $sql_dbname;
 
-echo "$dbname";
     $conn = new mysqli($servername, $username, $password, $dbname);
     if ($conn->connect_error) {
         die("Connection failed: " . $conn->connect_error);
@@ -43,21 +42,6 @@ function executeQuery_addNewFlight($sql) {
 
 // Function to add a new data point for an object
 function addDataPoint($objectID, $packetNo, $latitude, $longitude, $altitude, $gnssSats, $gnssFix, $vbat, $max_altitude, $raw) {
-//    // Check if the given object name exists in the Objects table
-//    $sql = "SELECT object_id FROM Objects WHERE object_name = '$objectID'";
-//    $result = executeQuery($sql);
-//
-//    if ($result->num_rows === 0) {
-//        // If the object does not exist, insert it into the Objects table
-//        $sql = "INSERT INTO Objects (object_name) VALUES ('$objectID')";
-//        executeQuery($sql);
-//        $objectID = $conn->insert_id;
-//    } else {
-//        $row = $result->fetch_assoc();
-//        $objectID = $row["object_id"];
-//    }
-
-	//echo "Prepare SQL 1";
     // Check if there is a flight for this object within the last 15 minutes
     $sql = "SELECT flight_id, end_time FROM Flights WHERE object_id = $objectID ORDER BY end_time DESC LIMIT 1";
     //echo "Check if flight exists   $sql" . PHP_EOL ;
@@ -67,21 +51,14 @@ function addDataPoint($objectID, $packetNo, $latitude, $longitude, $altitude, $g
 	$flight_id = $row["flight_id"];
     $last_age = time() - $last_time ;
     
-    //echo "Last point age = $last_age"  . PHP_EOL ;
-	//echo "Flight id: $flight_id" . PHP_EOL ;
     $tmp = $result->num_rows;
-    //echo "Flight exists = $tmp" . PHP_EOL;
 
     if (($result->num_rows === 0) || ($last_age > 900)) {
-		echo "error";
         // If there is no flight or the last flight was more than 15 minutes ago, create a new flight
         $sql = "INSERT INTO Flights (object_id, start_time, end_time, last_latitude, last_longitude, last_altitude) 
 				VALUES ($objectID, NOW(), NOW(), $latitude, $longitude, $altitude)";
 				
         $flight_id = executeQuery_addNewFlight($sql);
-        //echo "New flight\n" . PHP_EOL ;
-        //echo "Executes  $sql" . PHP_EOL;
-		//echo "New FlightID $flight_id" . PHP_EOL;
     } else {
         // Use the latest flight for this object
 		if($gnssFix != 0){
