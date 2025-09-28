@@ -1,7 +1,10 @@
 <?php
 
+include 'config.php';
+
 // Function to execute SQL queries
 function executeQuery($sql) {
+    // Replace with your database connection code
     require 'config.php';
 	$servername = $sql_address;
 	$username = $sql_login;
@@ -29,7 +32,7 @@ function executeQuery($sql) {
 
 // Function to get all data points for a given flight_id
 function getDataPointsForFlight($flightId) {
-    $sql = "SELECT * FROM Data WHERE flight_id = $flightId";
+    $sql = "SELECT * FROM Data WHERE flight_id = $flightId ORDER BY datetime DESC";
     return executeQuery($sql);
 }
 

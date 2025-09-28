@@ -37,6 +37,7 @@ tr:hover {
 
 /* Style for the "Download log file" button */
 #downloadLogFileBtn,
+#downloadKmlFileBtn,
 #openGoogleMapsBtn {
     font-size: 18px;
     padding: 12px 24px;
@@ -51,6 +52,7 @@ tr:hover {
 }
 
 #downloadLogFileBtn:hover,
+#downloadKmlFileBtn:hover,
 #openGoogleMapsBtn:hover {
     background-color: #0056b3;
 }

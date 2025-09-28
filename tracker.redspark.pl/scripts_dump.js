@@ -4,7 +4,7 @@ var api_address = 'https://' + domain_name + '/';
 // Function to fetch data and populate the table and update markers on the map
 function fetchDataAndAddMarkers() {
 	try{
-		fetch(api_address + 'flights.php')
+		fetch(api_address + 'flights.php?mode=dump')
 			.then(response => response.json())
 			.then(data => {
 				const tableBody = document.querySelector('#data-table tbody');

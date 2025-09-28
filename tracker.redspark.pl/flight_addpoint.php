@@ -22,10 +22,11 @@ function executeQuery($sql) {
 
 // Function to execute SQL queries
 function executeQuery_addNewFlight($sql) {
-	$servername = "localhost";
-	$username = "dm66733_php_access";
-	$password = "t^xMU7kX)PGzJH!";
-	$dbname = "dm66733_rocket_tracker";
+	require 'config.php';
+	$servername = $sql_address;
+	$username = $sql_login;
+	$password = $sql_pass;
+	$dbname = $sql_dbname;
 
     $conn = new mysqli($servername, $username, $password, $dbname);
     if ($conn->connect_error) {
@@ -125,7 +126,7 @@ if ($_SERVER["REQUEST_METHOD"] === "GET"
 	$raw = trim($raw, '"');
 	$raw = trim($raw, "'");
 	
-	$max_length_raw = 20; 							// Change this to the desired maximum length
+	$max_length_raw = 100; 					// Change this to the desired maximum length
 	if (strlen($raw) > $max_length_raw) {
 		$raw = substr($raw, 0, $max_length_raw); 	// Truncate the text to the maximum length
 	}

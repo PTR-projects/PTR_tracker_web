@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PTR Rocket Tracker</title>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+	<link rel="stylesheet" href="leaflet_fullscreen.css"/>
+	<link rel="icon" href="favicon.svg" type="image/svg+xml">
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+	<script src="leaflet_fullscreen.js"></script>
+    <link rel="stylesheet" href="styles.css" />
+	<script src="scripts_dump.js"></script>
+</head>
+<body>
+    <!-- The container for the map -->
+    <div id="map-container"></div>
+
+    <!-- The container for the table -->
+    <div id="table-container">
+        <table id="data-table">
+            <thead>
+                <tr>
+                    <th>Flight ID</th>
+                    <th>Object ID</th>
+                    <th>Data Age</th>
+                    <th>Last Latitude</th>
+                    <th>Last Longitude</th>
+                    <th>Last Altitude</th>
+                    <th>Details</th>
+                </tr>
+            </thead>
+            <tbody>
+                <!-- Data will be inserted here -->
+            </tbody>
+        </table>
+    </div>
+	<script>
+		loadPage();
+	</script>
+</body>
+</html>

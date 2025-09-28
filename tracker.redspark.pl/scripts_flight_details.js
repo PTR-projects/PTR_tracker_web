@@ -2,10 +2,13 @@ var map;
 var g_last_lat = 0.0;
 var g_last_lon = 0.0;
 
+var domain_name = window.location.hostname;
+var api_address = 'https://' + domain_name + '/';
+
 // Function to fetch flight data based on flight_id
 async function fetchFlightData(flightId) {
     try {
-        const response = await fetch(`https://tracker.redspark.pl/flights.php?flight_id=${flightId}`);
+        const response = await fetch(`${api_address}flights.php?flight_id=${flightId}`);
         const data = await response.json();
         return data;
     } catch (error) {
@@ -52,19 +55,20 @@ function initMap(flightId, lastLatitude, lastLongitude) {
 function populateFlightDetailsTable(lastLatitude, lastLongitude, lastAltitude) {
     const tableBody = document.getElementById('flight-details-body');
     const row = document.createElement('tr');
-    row.innerHTML = `<td>${lastLatitude}</td><td>${lastLongitude}</td><td>${lastAltitude}</td>`;
+    row.innerHTML = `<td>${lastLatitude.slice(0, -1)}</td><td>${lastLongitude.slice(0, -1)}</td><td>${Math.trunc(lastAltitude)}</td>`;
     tableBody.appendChild(row);
 }
 
 // Function to fetch and populate the Data SQL table
 async function fetchAndPopulateDataSqlTable(flightId) {
     try {
-        const response = await fetch(`https://tracker.redspark.pl/flight_data.php?flight_id=${flightId}`);
+        const response = await fetch(`${api_address}flight_data.php?flight_id=${flightId}`);
         const flightData = await response.json();
 		
 		if (flightData.length === 0) {
             console.error('No flight data found for the given flight_id.');
 			disableDownloadButton();
+			disableDownloadKmlButton();
             return;
         }
 		
@@ -72,11 +76,10 @@ async function fetchAndPopulateDataSqlTable(flightId) {
         const tableBody = document.getElementById('data-sql-body');
         flightData.forEach(row => {
 			let time = row.datetime.split(' ')[1];
-            // Assuming your Data SQL table has two columns (Column 1 and Column 2)
             const rowData = `<td>${row.position_id}</td><td>${row.packet_no}</td>
 							 <td>${time}</td><td>${row.vbat}</td>
 							 <td>${row.latitude.slice(0, -1)}</td><td>${row.longitude.slice(0, -1)}</td>
-							 <td>${row.altitude}</td>`;
+							 <td>${Math.trunc(row.altitude)}</td>`;
             const newRow = document.createElement('tr');
             newRow.innerHTML = rowData;
             tableBody.appendChild(newRow);
@@ -103,6 +106,7 @@ async function fetchAndPopulateDataSqlTable(flightId) {
 		
 		// Add the button to download all data from trackData
 		enableDownloadButton(flightData);
+		enableDownloadKmlButton(flightData);
 		enableGoToGoogleMapsButton();
 		
     } catch (error) {
@@ -114,7 +118,8 @@ async function fetchAndPopulateDataSqlTable(flightId) {
 function downloadFlightData(flightData) {
 	var objectId = flightData[0].object_id;
 	var flightId = flightData[0].flight_id;
-    const fileName = `data_tracker_${objectId}_flight_${flightId}.csv`;
+    const fileName_raw = `data_tracker_${objectId}_flight_${flightId}.csv`;
+	const fileName = sanitizeFileName(fileName_raw);
 
 	var separator = ';'; // You can use ';' for a semicolon-separated CSV
 	var keys = Object.keys(flightData[0]);
@@ -137,6 +142,98 @@ function downloadFlightData(flightData) {
 	URL.revokeObjectURL(url);
 }
 
+function downloadFlightDataKML(flightData) {
+	var objectId = flightData[0].object_id;
+	var flightId = flightData[0].flight_id;
+    const fileName_raw = `data_tracker_${objectId}_flight_${flightId}.kml`;
+	const fileName = sanitizeFileName(fileName_raw);
+
+	var flight_coord = [];
+	flightData.forEach((row) => {
+			flight_coord.push({lat: row.latitude, lon: row.longitude, alt: row.altitude});
+
+	});
+	
+	const kmlContent = generateTrackKML(`data_tracker_${objectId}_flight_${flightId}`, flight_coord);
+
+	const blob = new Blob([kmlContent], { type: 'application/vnd.google-earth.kml+xml' });
+	const url = URL.createObjectURL(blob);
+	const a = document.createElement('a');
+	a.href = url;
+	a.download = fileName;
+	a.click();
+	URL.revokeObjectURL(url);
+}
+
+// Function to generate KML content for a track from the coordinates array
+function generateTrackKML(name, coordinates) {
+  let kml = `<?xml version="1.0" encoding="UTF-8"?>
+<kml xmlns="http://www.opengis.net/kml/2.2">
+  <Document>
+    <name>${name}</name>
+	<open>1</open>
+	<Style id="failed">
+		<LineStyle>
+			<width>4</width>
+		</LineStyle>
+		<PolyStyle>
+			<color>800000ff</color>
+			<outline>0</outline>
+		</PolyStyle>
+	</Style>
+	<Style id="failed0">
+		<LineStyle>
+			<width>4</width>
+		</LineStyle>
+		<PolyStyle>
+			<color>800000ff</color>
+			<outline>0</outline>
+		</PolyStyle>
+	</Style>
+	<StyleMap id="failed1">
+		<Pair>
+			<key>normal</key>
+			<styleUrl>#failed</styleUrl>
+		</Pair>
+		<Pair>
+			<key>highlight</key>
+			<styleUrl>#failed0</styleUrl>
+		</Pair>
+	</StyleMap>
+    <Placemark>
+      <name>Track</name>
+	  <styleUrl>#failed1</styleUrl>
+      <LineString>
+		<extrude>1</extrude>
+		<altitudeMode>absolute</altitudeMode>
+        <coordinates>`;
+
+  for (const coord of coordinates) {
+    kml += `${coord.lon},${coord.lat},${coord.alt} `;
+  }
+
+  kml += `
+      </coordinates>
+      <altitudeMode>absolute</altitudeMode>
+    </LineString>
+  </Placemark>
+</Document>
+</kml>`;
+
+  return kml;
+}
+
+function sanitizeFileName(fileName) {
+  // Define a regular expression to match characters not allowed in file names
+  const illegalChars = /[/\\?%*:|"<>]/g;
+
+  // Replace illegal characters with an underscore
+  const sanitizedFileName = fileName.replace(illegalChars, '_');
+
+  return sanitizedFileName;
+}
+
+// Download CSV
 // Function to rename the button and disable it
 function disableDownloadButton() {
     const downloadBtn = document.getElementById('downloadLogFileBtn');
@@ -154,6 +251,25 @@ function enableDownloadButton(data) {
 	});
 }
 
+// Download KML
+// Function to rename the button and disable it
+function disableDownloadKmlButton() {
+    const downloadKmlBtn = document.getElementById('downloadKmlFileBtn');
+    downloadKmlBtn.textContent = 'No Data Available';
+    downloadKmlBtn.disabled = true;
+}
+
+// Function to rename the button and enable it
+function enableDownloadKmlButton(data) {
+    const downloadKmlBtn = document.getElementById('downloadKmlFileBtn');
+    downloadKmlBtn.textContent = 'Download KML';
+    downloadKmlBtn.disabled = false;
+	downloadKmlBtn.addEventListener ('click', () => {
+		downloadFlightDataKML(data);
+	});
+}
+
+// Open Google Maps
 function enableGoToGoogleMapsButton(data) {
     const mapsBtn = document.getElementById('openGoogleMapsBtn');
     mapsBtn.textContent = 'Open Google Maps';

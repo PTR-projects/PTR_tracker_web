@@ -30,18 +30,24 @@ function executeQuery($sql) {
 
 // Function to get a list of all flights
 function getAllFlights() {
-    $sql = "SELECT f.*
+    $sql = 			
+			"SELECT f.*
 			FROM Flights f
-			INNER JOIN (
-				SELECT object_id, MAX(end_time) AS most_recent_end_time
-				FROM Flights
-				GROUP BY object_id
-			) subquery
-			ON f.object_id = subquery.object_id AND f.end_time = subquery.most_recent_end_time;";
+			WHERE f.end_time >= NOW() - INTERVAL 10 DAY
+			ORDER BY f.end_time DESC;";
     return executeQuery($sql);
 }
 
-// Function to get a list of all flights
+// Function to get a list of all flights without any filters
+function getFlightsDump() {
+    $sql = 			
+			"SELECT f.*
+			FROM Flights f
+			ORDER BY f.end_time DESC;";
+    return executeQuery($sql);
+}
+
+// Function to get a list of all flights from FM23
 function getSummaryFm23() {
     $sql = "SELECT f.*
 			FROM Flights f
@@ -62,7 +68,6 @@ function getFlight($flightId) {
 
 // Check if the request is a GET request
 if ($_SERVER["REQUEST_METHOD"] === "GET") {
-	
 	if (isset($_GET["flight_id"]) && ctype_digit($_GET["flight_id"])) {
 		$flightId = $_GET["flight_id"];
 		$flights = getFlight($flightId);
@@ -71,6 +76,10 @@ if ($_SERVER["REQUEST_METHOD"] === "GET") {
 		$mode = $_GET["mode"];
 		if($mode == "summary_fm23"){
 			//FM23 data
+			$flights = getSummaryFm23();
+		}
+		else if($mode == "dump"){
+			$flights = getFlightsDump();
 		}
 	}
 	else {

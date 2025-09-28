@@ -1,7 +1,10 @@
+var domain_name = window.location.hostname;
+var api_address = 'https://' + domain_name + '/';
+
 // Function to fetch data and populate the table and update markers on the map
 function fetchDataAndAddMarkers() {
 	try{
-		fetch('https://tracker.redspark.pl/flights.php?mode=%27summary_fm23%27')
+		fetch(api_address + 'flights.php?mode=summary_fm23')
 			.then(response => response.json())
 			.then(data => {
 				const tableBody = document.querySelector('#data-table tbody');
@@ -31,7 +34,7 @@ function fetchDataAndAddMarkers() {
 					// Fetch track data for the flight
 					try{
 						var flight_id = flight.flight_id;
-						fetch('https://tracker.redspark.pl/flight_sum.php?flight_id=' + flight_id)
+						fetch(api_address + 'flight_sum.php?flight_id=' + flight_id)
 						.then(response => response.json())
 						.then(trackData => {
 							// Create an array to store track coordinates
@@ -85,7 +88,7 @@ function openFlightDetails(flightId, objectId){
 // Function to download flight data as CSV file
 function downloadFlightData(flightId, objectId) {
     const fileName = `data_tracker_${objectId}_flight_${flightId}.csv`;
-    const url = `https://tracker.redspark.pl/flight_data.php?flight_id=${flightId}`;
+    const url = api_address + `flight_data.php?flight_id=${flightId}`;
 
     fetch(url)
         .then(response => {
