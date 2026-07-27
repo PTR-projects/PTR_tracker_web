@@ -43,58 +43,51 @@ function executeQuery_addNewFlight($sql) {
 
 // Function to add a new data point for an object
 function addDataPoint($objectID, $packetNo, $latitude, $longitude, $altitude, $gnssSats, $gnssFix, $vbat, $max_altitude, $raw) {
-    // Check if there is a flight for this object within the last 15 minutes
-    $sql = "SELECT flight_id, end_time FROM Flights WHERE object_id = $objectID ORDER BY end_time DESC LIMIT 1";
-    //echo "Check if flight exists   $sql" . PHP_EOL ;
+    // Check if there is a flight for this object within the last 15 minutes.
+    // Compute the age entirely inside MySQL so we never mix PHP's clock/timezone
+    // with MySQL's clock/timezone.
+    $sql = "SELECT flight_id, TIMESTAMPDIFF(SECOND, end_time, NOW()) AS age_seconds
+            FROM Flights WHERE object_id = $objectID ORDER BY end_time DESC LIMIT 1";
     $result = executeQuery($sql);
-	$row = $result->fetch_assoc();
-    $last_time =  strtotime($row["end_time"]);
-	$flight_id = $row["flight_id"];
-    $last_age = time() - $last_time ;
-    
-    $tmp = $result->num_rows;
+    $row = $result->fetch_assoc();
+
+    $flight_id = $row ? $row["flight_id"] : null;
+    $last_age  = $row ? (int)$row["age_seconds"] : null;
 
     if (($result->num_rows === 0) || ($last_age > 900)) {
         // If there is no flight or the last flight was more than 15 minutes ago, create a new flight
         $sql = "INSERT INTO Flights (object_id, start_time, end_time, last_latitude, last_longitude, last_altitude) 
-				VALUES ($objectID, NOW(), NOW(), $latitude, $longitude, $altitude)";
-				
+                VALUES ($objectID, NOW(), NOW(), $latitude, $longitude, $altitude)";
         $flight_id = executeQuery_addNewFlight($sql);
     } else {
         // Use the latest flight for this object
-		if($gnssFix != 0){
-			$sql = "UPDATE Flights 
-				SET end_time = NOW(),  
-				last_longitude = $longitude,
-				last_latitude = $latitude,
-				last_altitude = $altitude
-				WHERE flight_id = $flight_id";
-		}
-		else {
-			$sql = "UPDATE Flights 
-				SET end_time = NOW()
-				WHERE flight_id = $flight_id";
-		}
-        
-		//echo "Last point age = $sql"  . PHP_EOL ;
+        if ($gnssFix != 0) {
+            $sql = "UPDATE Flights 
+                SET end_time = NOW(),  
+                last_longitude = $longitude,
+                last_latitude = $latitude,
+                last_altitude = $altitude
+                WHERE flight_id = $flight_id";
+        } else {
+            $sql = "UPDATE Flights 
+                SET end_time = NOW()
+                WHERE flight_id = $flight_id";
+        }
         executeQuery($sql);
-        //echo "Update last msg time $sql" . PHP_EOL;
     }
 
-	
     // Insert the new data point into the Data table
     $sql = "INSERT INTO Data (flight_id, object_id, datetime, packet_no, latitude, longitude, altitude, gnss_sats, gnss_fix, vbat, max_altitude, raw) 
             VALUES ($flight_id, $objectID, NOW(), $packetNo, $latitude, $longitude, $altitude, $gnssSats, $gnssFix, $vbat, $max_altitude, '$raw')";
     executeQuery($sql);
-	//echo "Add new data point $sql" . PHP_EOL;
-    
-    // Return response indicating success or error
+
     if ($flight_id) {
         return "OK";
     } else {
         return "Error";
     }
 }
+
 //echo "Parsing started". PHP_EOL;
 // Check if the request is a GET request and contains the required parameters
 if ($_SERVER["REQUEST_METHOD"] === "GET"
