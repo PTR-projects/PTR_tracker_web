@@ -1,53 +1,27 @@
 <?php
 
-include 'config.php';
+require __DIR__ . '/db.php';
 
-// Function to execute SQL queries
-function executeQuery($sql) {
-    // Replace with your database connection code
-    require 'config.php';
-	$servername = $sql_address;
-	$username = $sql_login;
-	$password = $sql_pass;
-	$dbname = $sql_dbname;
+// Upper bound on returned points (~5.5 h at the ingest limit of 1 sample/s)
+const MAX_DATA_POINTS = 20000;
 
-    $conn = new mysqli($servername, $username, $password, $dbname);
-    if ($conn->connect_error) {
-        die("Connection failed: " . $conn->connect_error);
-    }
-
-    $result = $conn->query($sql);
-
-    $rows = array();
-    if ($result->num_rows > 0) {
-        while ($row = $result->fetch_assoc()) {
-            $rows[] = $row;
-        }
-    }
-
-    $conn->close();
-
-    return $rows;
-}
-
-// Function to get all data points for a given flight_id
+// Function to get the data points for a given flight_id (newest MAX_DATA_POINTS)
 function getDataPointsForFlight($flightId) {
-    $sql = "SELECT * FROM Data WHERE flight_id = $flightId ORDER BY datetime DESC";
-    return executeQuery($sql);
+    return db_fetch_all(
+        "SELECT * FROM Data WHERE flight_id = ? ORDER BY datetime DESC LIMIT " . MAX_DATA_POINTS,
+        "i", $flightId);
 }
 
-// Check if the request is a GET request and contains the flight_id parameter
-if ($_SERVER["REQUEST_METHOD"] === "GET" 
-		&& isset($_GET["flight_id"])
-		&& ctype_digit($_GET["flight_id"])) {
-			
-    $flightId = intval($_GET["flight_id"]);
-
-    // Get all data points for the given flight_id
-    $dataPoints = getDataPointsForFlight($flightId);
-
-    // Return the data as JSON response
-    header("Content-Type: application/json");
-    echo json_encode($dataPoints);
+if ($_SERVER["REQUEST_METHOD"] !== "GET") {
+    api_fail(405, "Method not allowed");
 }
+
+$flightId = get_id_param("flight_id");
+if ($flightId === null) {
+    api_fail(400, "Invalid flight_id");
+}
+
+// Return all data points for the given flight_id as JSON response
+send_json(getDataPointsForFlight($flightId));
+
 ?>
