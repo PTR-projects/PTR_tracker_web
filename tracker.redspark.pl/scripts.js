@@ -3,103 +3,66 @@ var api_address = 'https://' + domain_name + '/';
 
 // Function to fetch data and populate the table and update markers on the map
 function fetchDataAndAddMarkers() {
-	try{
-		fetch(api_address + 'flights.php')
-			.then(response => response.json())
-			.then(data => {
-				const tableBody = document.querySelector('#data-table tbody');
+	fetch(api_address + 'flights.php')
+		.then(response => response.json())
+		.then(data => {
+			const tableBody = document.querySelector('#data-table tbody');
 
-				// Clear the previous table data and markers on the map
-				tableBody.innerHTML = '';
-				map.eachLayer(function (layer) {
-					if (!(layer instanceof L.TileLayer)) {
-						map.removeLayer(layer);
-					}
-				});
-
-				data.forEach(flight => {
-					var tracksLayer = L.layerGroup();
-					var markersLayer = L.layerGroup();
-					
-					// Calculate the time difference between now and the "End Time" in seconds
-					const timeDifference = calculateTimeDifference(flight.end_time);
-					
-					// Check if latitude and longitude are not null
-					if (flight.last_latitude !== null && flight.last_longitude !== null) {
-						// Add marker to the map at the given latitude and longitude
-						const marker = L.marker([flight.last_latitude, flight.last_longitude]);
-						// Add a popup with flight details to the marker
-						marker.bindPopup(createPopupContent(flight.object_id, flight.flight_id, flight.last_latitude, flight.last_longitude, flight.last_altitude, timeDifference));
-						markersLayer.addLayer(marker);
-					}
-
-					// Fetch track data for the flight
-					try{
-						var flight_id = flight.flight_id;
-						fetch(api_address + 'flight_sum.php?flight_id=' + flight_id)
-						.then(response => response.json())
-						.then(trackData => {
-							// Create an array to store track coordinates
-							const trackCoordinates = [];
-							
-							trackData.forEach(track => {
-								const { latitude, longitude } = track;
-								if (latitude !== null && longitude !== null) {
-									trackCoordinates.push([latitude, longitude]);
-								}
-							});
-							
-							var objectTrack = {
-								"color": "#ff7800",
-								"weight": 5,
-								"opacity": 0.75
-							};
-						
-							// Add the track to the map if it has valid coordinates
-							if (trackCoordinates.length > 0) {
-								const track = L.polyline(trackCoordinates, objectTrack);
-								track.bindPopup(createPopupContent(flight.object_id, flight.flight_id, flight.latitude, flight.longitude, flight.altitude, timeDifference));
-								//tracksLayer.addLayer(track);
-							}
-						});
-					}
-					catch(error){
-						console.error('Error fetching data from flight_sum.php:', error);
-					}
-					
-						
-					
-					// Add the marker and track layers to the map
-					map.addLayer(markersLayer);
-					map.addLayer(tracksLayer);
-
-					// Populate the table
-					const row = document.createElement('tr');
-					row.innerHTML = `
-						<td>${flight.flight_id}</td>
-						<td>${flight.object_id}</td>
-						<td>${timeDifference}</td>
-						<td>${Number.parseFloat(flight.last_latitude).toFixed(5)}</td>
-						<td>${Number.parseFloat(flight.last_longitude).toFixed(5)}</td>
-						<td>${Math.trunc(flight.last_altitude)}</td>
-						<td>
-							<button class="details-button" onclick="openFlightDetails(${flight.flight_id}, ${flight.object_id})">Details</button>
-						</td>
-					`;
-					tableBody.appendChild(row);
-
-					// Add a click event listener to the row
-						if (window.innerWidth <= 768) {
-								row.addEventListener('click', () => {
-									openFlightDetails(flight.flight_id, flight.object_id);
-								});
-						}
-				});
+			// Clear the previous table data and markers on the map
+			tableBody.innerHTML = '';
+			map.eachLayer(function (layer) {
+				if (!(layer instanceof L.TileLayer)) {
+					map.removeLayer(layer);
+				}
 			});
-	}
-	catch(error){
-		console.error('Error fetching data flights.php:', error);
-	}
+
+			data.forEach(flight => {
+				var markersLayer = L.layerGroup();
+				
+				// Data age is computed by MySQL (age_seconds) so browser clock/timezone doesn't matter
+				const timeDifference = formatDataAge(flight.age_seconds);
+				
+				// Check if latitude and longitude are not null
+				if (flight.last_latitude !== null && flight.last_longitude !== null) {
+					// Add marker to the map at the given latitude and longitude
+					const marker = L.marker([flight.last_latitude, flight.last_longitude]);
+					// Add a popup with flight details to the marker
+					marker.bindPopup(createPopupContent(flight.object_id, flight.flight_id, flight.last_latitude, flight.last_longitude, flight.last_altitude, timeDifference));
+					markersLayer.addLayer(marker);
+				}
+
+				// Track drawing is disabled on this page, so track data (flight_sum.php) isn't fetched;
+				// polling it for every flight every 15 s only loaded the server.
+
+				// Add the marker layer to the map
+				map.addLayer(markersLayer);
+
+				// Populate the table
+				const row = document.createElement('tr');
+				row.innerHTML = `
+					<td>${flight.flight_id}</td>
+					<td>${flight.object_id}</td>
+					<td>${timeDifference}</td>
+					<td>${Number.parseFloat(flight.last_latitude).toFixed(5)}</td>
+					<td>${Number.parseFloat(flight.last_longitude).toFixed(5)}</td>
+					<td>${Math.trunc(flight.last_altitude)}</td>
+					<td>
+						<button class="details-button" onclick="openFlightDetails(${flight.flight_id}, ${flight.object_id})">Details</button>
+					</td>
+				`;
+				tableBody.appendChild(row);
+
+				// Add a click event listener to the row
+					if (window.innerWidth <= 768) {
+							row.addEventListener('click', () => {
+								openFlightDetails(flight.flight_id, flight.object_id);
+							});
+					}
+			});
+		})
+		.catch(error => {
+			console.error('Error fetching data from flights.php:', error);
+		});
 }
 
 function openFlightDetails(flightId, objectId){
@@ -116,8 +79,6 @@ function downloadFlightData(flightId, objectId) {
         .then(response => {
             if (!response.ok) {
                 throw new Error('Network response was not ok');
-		alert('Error downloading flight data. Please try again later.')
-
             }
             return response.text();
         })
@@ -180,11 +141,9 @@ function mapInit() {
 
 
 
-// Function to calculate the time difference between now and the "Start Time" in seconds, minutes, or hours
-function calculateTimeDifference(startTime) {
-    const currentTime = new Date();
-    const startTimeDate = new Date(startTime);
-    const timeDifferenceInSeconds = Math.floor((currentTime - startTimeDate) / 1000);
+// Function to format the age of the last data point (in seconds) as seconds, minutes, or hours
+function formatDataAge(ageSeconds) {
+    const timeDifferenceInSeconds = parseInt(ageSeconds, 10);
 
     if (timeDifferenceInSeconds < 60) {
         return timeDifferenceInSeconds + 's';

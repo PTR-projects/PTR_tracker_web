@@ -1,4 +1,16 @@
 RewriteEngine On
+
+# Block direct web access to config, helpers, logs, dumps and VCS/IDE files
+RewriteRule (^|/)\.(git|idea) - [F,L]
+RewriteRule ^(config.*\.php|db\.php|error_log)$ - [F,L]
+RewriteRule ^cache(/|$) - [F,L]
+RewriteRule \.(sql|log|bak|swp)$ - [F,L]
+
+# Force HTTPS (except for the tracker ingest endpoint, which the device calls over plain HTTP)
 RewriteCond %{SERVER_PORT} 80
-RewriteCond %{REQUEST_URI} !^/flight_addpoint\.php$ 
+RewriteCond %{REQUEST_URI} !^/flight_addpoint\.php$
 RewriteRule ^(.*)$ https://tracker.redspark.pl/$1 [R,L]
+
+<IfModule mod_headers.c>
+    Header always set X-Content-Type-Options "nosniff"
+</IfModule>
